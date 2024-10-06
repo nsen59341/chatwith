@@ -34,14 +34,15 @@
 
             <div class="row">
 
-                <div class="col-md-6 col-lg-5 col-xl-5 mb-4 mb-md-0">
+               <!--  <div class="col-md-6 col-lg-5 col-xl-5 mb-4 mb-md-0">
 
                 <h5 class="font-weight-bold mb-3 text-center text-white">Member</h5>
 
                 <div class="card mask-custom">
                     <div class="card-body">
 
-                    <ul class="list-unstyled mb-0">
+                    <ul class="list-unstyled mb-0 msg-container">
+
                         <li class="p-2 border-bottom" style="border-bottom: 1px solid rgba(255,255,255,.3) !important;">
                         <a href="#!" class="d-flex justify-content-between link-light">
                             <div class="d-flex flex-row">
@@ -149,83 +150,29 @@
                             </div>
                         </a>
                         </li>
-                    </ul>
+                    </ul> 
 
                     </div>
-                </div>
+                </div> 
 
-                </div>
+                </div> -->
 
                 <div class="col-md-6 col-lg-7 col-xl-7">
 
-                <form method="POST" action="">
+                <form method="POST" id="msgForm" action="">
                     {% csrf_token %}
-                    <ul class="list-unstyled text-white">
-                        <li class="d-flex justify-content-between mb-4">
-                        <img src="https://mdbcdn.b-cdn.net/img/Photos/Avatars/avatar-6.webp" alt="avatar"
-                            class="rounded-circle d-flex align-self-start me-3 shadow-1-strong" width="60">
-                        <div class="card mask-custom">
-                            <div class="card-header d-flex justify-content-between p-3"
-                            style="border-bottom: 1px solid rgba(255,255,255,.3);">
-                            <p class="fw-bold mb-0">Brad Pitt</p>
-                            <p class="text-light small mb-0"><i class="far fa-clock"></i> 12 mins ago</p>
-                            </div>
-                            <div class="card-body">
-                            <p class="mb-0">
-                                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
-                                labore et dolore magna aliqua.
-                            </p>
-                            </div>
-                        </div>
-                        </li>
-                        <li class="d-flex justify-content-between mb-4">
-                        <div class="card mask-custom w-100">
-                            <div class="card-header d-flex justify-content-between p-3"
-                            style="border-bottom: 1px solid rgba(255,255,255,.3);">
-                            <p class="fw-bold mb-0">Lara Croft</p>
-                            <p class="text-light small mb-0"><i class="far fa-clock"></i> 13 mins ago</p>
-                            </div>
-                            <div class="card-body">
-                            <p class="mb-0">
-                                Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque
-                                laudantium.
-                            </p>
-                            </div>
-                        </div>
-                        <img src="https://mdbcdn.b-cdn.net/img/Photos/Avatars/avatar-5.webp" alt="avatar"
-                            class="rounded-circle d-flex align-self-start ms-3 shadow-1-strong" width="60">
-                        </li>
-                        <li class="d-flex justify-content-between mb-4">
-                        <img src="https://mdbcdn.b-cdn.net/img/Photos/Avatars/avatar-6.webp" alt="avatar"
-                            class="rounded-circle d-flex align-self-start me-3 shadow-1-strong" width="60">
-                        <div class="card mask-custom">
-                            <div class="card-header d-flex justify-content-between p-3"
-                            style="border-bottom: 1px solid rgba(255,255,255,.3);">
-                            <p class="fw-bold mb-0">Brad Pitt</p>
-                            <p class="text-light small mb-0"><i class="far fa-clock"></i> 10 mins ago</p>
-                            </div>
-                            <div class="card-body">
-                            <p class="mb-0">
-                                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
-                                labore et dolore magna aliqua.
-                            </p>
-                            </div>
-                        </div>
-                        </li>
-                        <li class="mb-3">
-                            <div class="form-outline form-white" style="display:none;">
-                                {{ msgfrm.sender }}
-                            </div>
-                            <div class="form-outline form-white" style="display:none;">
-                                {{ msgfrm.receiver }}
-                            </div>
-                            <div class="form-outline form-white"> 
-                                {{ msgfrm.msg }}
-                            </div>
-                        </li>
-                        <button type="submit" class="btn btn-light btn-lg btn-rounded float-end">Send</button>
-
+                    <ul class="list-unstyled text-white" id="msg-container">  
                     </ul>
+
+                    <div class="mb-3">
+                        <div class="form-outline form-white" style="display:none;">
+                            {{ msgfrm.sender }}
+                        </div>
+                        <div class="form-outline form-white"> 
+                            {{ msgfrm.msg }}
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-light btn-lg btn-rounded float-end btn-send" id="msgBtn">Send</button>
 
                 </form>
 
@@ -240,7 +187,81 @@
         <!-- MDB -->
         <script type="text/javascript" src="{% static 'js/mdb.min.js' %}"></script>
         <!-- Custom scripts -->
-        <script type="text/javascript"></script>
+        <script type="text/javascript">
+
+            const chatSocket = new WebSocket("ws://" + window.location.host + "/");
+            chatSocket.onopen = function(e) {
+                console.log("The Connection was setup Successfully!");
+            }
+
+            chatSocket.close = function(e) {
+                console.log("The Connection was got Lost!");
+            }
+
+            document.querySelector("#msgArea").focus();
+            document.querySelector("#msgArea").onkeyup = function(e) {
+                if(e.keyCode == 13) {
+                    document.querySelector("#msgBtn").click();
+                }
+            }
+
+            document.querySelector("#msgBtn").onclick = function(e) {
+                var messageInput = document.querySelector("#msgArea").value;
+                var currTime = new Date();
+                var time = currTime.toLocaleTimeString();
+                chatSocket.send(JSON.stringify({
+                    message: messageInput,
+                    username: 'Guest',
+                    time: time
+                }));
+            }
+
+            chatSocket.onmessage = function(e) {
+                const data = JSON.parse(e.data);
+                console.log('data', data);
+
+                var messageContainer = document.querySelector("#msg-container");
+                var msgBox = document.createElement("li");
+                msgBox.className = "d-flex justify-content-between mb-4";
+
+                var el = `<img src="https://mdbcdn.b-cdn.net/img/Photos/Avatars/avatar-1.webp" alt="avatar"`+
+                            `class="rounded-circle d-flex align-self-start me-3 shadow-1-strong" width="60">`+
+                        `<div class="card mask-custom">`+
+                            `<div class="card-header d-flex justify-content-between p-3"`+
+                            `style="border-bottom: 1px solid rgba(255,255,255,.3);">`+
+                            `<p class="fw-bold mb-0"> ${data.username} </p>`+
+                            `<p class="text-light small mb-0"><i class="far fa-clock"></i> ${data.time} </p>`+
+                            `</div>`+
+                            `<div class="card-body">`+
+                            `<p class="mb-0"> ${data.message}` +
+                            `</p>`+
+                            `</div>`+
+                        `</div>`;
+                    
+                msgBox.innerHTML = el;
+
+                document.querySelector("#msgArea").value = '';
+
+                messageContainer.append(msgBox);
+
+                // $("#msgForm").submit();
+                
+                $.ajax({
+                    type:'POST',
+                    url:'{% url "home" %}',
+                    data:
+                    {
+                        sender: data.username,
+                        msg: data.message,
+                        csrfmiddlewaretoken:$('input[name=csrfmiddlewaretoken]').val()
+                    },
+                    success:function(){
+                    alert('Saved');
+                    }
+                })
+            }
+
+        </script>
     </body>
 
 {% endblock %}    
