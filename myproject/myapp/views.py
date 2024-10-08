@@ -3,6 +3,9 @@ from .models import Msg
 from .forms import MsgForm
 from django.http import HttpResponse
 import socket
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth import login, logout, authenticate
+
 
 # Create your views here.
 
@@ -75,3 +78,23 @@ def home(request):
     
     
     return render(request, 'home.html', {'msgfrm':msgfrm})
+
+def userRegistration(request):
+    print(request.method)
+    if request.method=='POST':
+        regForm = UserCreationForm(request.POST)
+        if regForm.is_valid():
+            user = regForm.save()
+            login(request,user)
+            return redirect('home')
+    else:
+        initials = {'username':'', 'password1':'', 'password2':''}
+        regForm = UserCreationForm(initial=initials)
+    return render(request,'auth/registration.html', {'form':regForm})
+
+
+def userLogin(request):
+    pass 
+
+def userLogout(request):
+    pass
