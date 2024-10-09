@@ -1,0 +1,17 @@
+<form method="POST" action="{% url 'login' %}" class="form-centered">
+    {% csrf_token %}
+    <div class="form-group">
+        <label class="form-label" for="form.username.id_for_label">Username</label>
+        <input type="text" name="{{ form.username.name }}" class="form-control" placeholder="Username" value="{{ form.username.value }}">
+        <span class="text-danger">{{ form.username.errors }}</span>
+    </div>
+    <div class="form-group">
+        <label class="form-label" for="form.password.id_for_label">Password</label>
+        <input type="password" name="{{ form.password.name }}" class="form-control" placeholder="Password" value="{{ form.password.value }}">
+        <span class="text-danger">{{ form.password.errors }}</span>
+    </div>
+    <div class="text-center">
+        <button type="submit" class="btn btn-dark">Sign in</button>
+        <a href="{% url 'registration' %}" class="btn btn-info">Sign up</a>
+    </div>
+</form>

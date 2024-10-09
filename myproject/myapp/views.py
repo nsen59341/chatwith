@@ -80,12 +80,12 @@ def home(request):
     return render(request, 'home.html', {'msgfrm':msgfrm})
 
 def userRegistration(request):
-    print(request.method)
     if request.method=='POST':
         regForm = UserCreationForm(request.POST)
         if regForm.is_valid():
             user = regForm.save()
             login(request,user)
+            request.session['username'] = user.username
             return redirect('home')
     else:
         initials = {'username':'', 'password1':'', 'password2':''}
@@ -94,7 +94,16 @@ def userRegistration(request):
 
 
 def userLogin(request):
-    pass 
+    if request.method=='POST':
+        loginForm = AuthenticationForm(request, data=request.POST)    
+        if loginForm.is_valid():
+            user = loginForm.get_user()
+            login(request, user)
+            return redirect('home') 
+    else: 
+        initials = {'username':'', 'password':''}  # to prevent form from being empty when user revisits the page
+        loginForm = AuthenticationForm(initial=initials)
+    return render(request,'auth/login.html', {'form':loginForm})
 
 def userLogout(request):
     pass
