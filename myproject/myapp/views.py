@@ -5,13 +5,15 @@ from django.http import HttpResponse
 import socket
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import login, logout, authenticate
-
+from .middleware import auth, guest
+from django.utils.decorators import method_decorator
 
 # Create your views here.
 
 def external(request):
     return HttpResponse('<h2>Django Chat App</h2> <iframe src="https://deadsimplechat.com/jZJO773Ni" width="100%" height="600px"></iframe>')
 
+@auth
 def home(request):
 
     # bind to the port with any IP address
@@ -79,6 +81,7 @@ def home(request):
     
     return render(request, 'home.html', {'msgfrm':msgfrm})
 
+@guest
 def userRegistration(request):
     if request.method=='POST':
         regForm = UserCreationForm(request.POST)
@@ -92,7 +95,7 @@ def userRegistration(request):
         regForm = UserCreationForm(initial=initials)
     return render(request,'auth/registration.html', {'form':regForm})
 
-
+@guest
 def userLogin(request):
     if request.method=='POST':
         loginForm = AuthenticationForm(request, data=request.POST)    
@@ -106,4 +109,5 @@ def userLogin(request):
     return render(request,'auth/login.html', {'form':loginForm})
 
 def userLogout(request):
-    pass
+    logout(request)
+    return redirect('login')
