@@ -86,6 +86,7 @@ def userRegistration(request):
         if regForm.is_valid():
             user = regForm.save()
             login(request,user)
+            
             return redirect('home')
     else:
         initials = {'username':'', 'password1':'', 'password2':''}
