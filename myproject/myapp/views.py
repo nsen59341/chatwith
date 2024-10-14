@@ -5,13 +5,17 @@ from django.http import HttpResponse
 import socket
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import login, logout, authenticate
-
+from .middleware import auth, guest
+from django.utils.decorators import method_decorator
+from django.contrib.auth.models import User
+from .models import Msg
 
 # Create your views here.
 
 def external(request):
     return HttpResponse('<h2>Django Chat App</h2> <iframe src="https://deadsimplechat.com/jZJO773Ni" width="100%" height="600px"></iframe>')
 
+@auth
 def home(request):
 
     # bind to the port with any IP address
@@ -25,7 +29,12 @@ def home(request):
     # except socket.error as err:
     #             return render(request, 'error.html', {'error':err})
 
+    msgset = Msg.objects.all()
+    msg_dict = dict((i.sender, [i.msg, i.lastSent]) for i in msgset)
+
     msgfrm = MsgForm()
+
+    print('msg_dict', msg_dict)
 
     # print(s,s)
     # print('method', request.method)
@@ -76,26 +85,37 @@ def home(request):
     #     # Breaking once connection closed
     #     break
     
-    
-    return render(request, 'home.html', {'msgfrm':msgfrm})
+    return render(request, 'home.html', {'msgfrm':msgfrm, 'msgs':msg_dict})
 
+@guest
 def userRegistration(request):
-    print(request.method)
     if request.method=='POST':
         regForm = UserCreationForm(request.POST)
         if regForm.is_valid():
             user = regForm.save()
             login(request,user)
-            
+
+            request.session['username'] = user.username
+
             return redirect('home')
     else:
         initials = {'username':'', 'password1':'', 'password2':''}
         regForm = UserCreationForm(initial=initials)
     return render(request,'auth/registration.html', {'form':regForm})
 
-
+@guest
 def userLogin(request):
-    pass 
+    if request.method=='POST':
+        loginForm = AuthenticationForm(request, data=request.POST)    
+        if loginForm.is_valid():
+            user = loginForm.get_user()
+            login(request, user)
+            return redirect('home') 
+    else: 
+        initials = {'username':'', 'password':''}  # to prevent form from being empty when user revisits the page
+        loginForm = AuthenticationForm(initial=initials)
+    return render(request,'auth/login.html', {'form':loginForm})
 
 def userLogout(request):
-    pass
+    logout(request)
+    return redirect('login')

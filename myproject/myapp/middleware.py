@@ -1,5 +1,19 @@
-from auth import AuthenticationMiddleware
+from django.shortcuts import redirect
 
-class userMiddleware(AuthenticationMiddleware):
-    def __call__(self, request):
-        print('request', request)
+# Authenticated Users 
+def auth(view_fun):
+    def wrapper_fun(request, *args, **kwargs):
+        if request.user.is_authenticated == False:
+            return redirect('login')
+        else:
+            return view_fun(request, *args, **kwargs)
+    return wrapper_fun
+
+def guest(view_fun):
+    def wrapper_fun(request, *args, **kwargs):
+        if request.user.is_authenticated == True:
+            return redirect('home')
+        else:
+            return view_fun(request, *args, **kwargs)
+    return wrapper_fun
+
