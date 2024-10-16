@@ -26,16 +26,16 @@ def home(request):
     #     # SOCK_STREAM: Connection Oriented TCP Protocol
     # except socket.error as err:
     #             return render(request, 'error.html', {'error':err})
-
-    msgfrm = MsgForm()
+    # print('username', request.user.username)
+    msgfrm = MsgForm(initial={'sender': request.user.username})
 
     # print(s,s)
     # print('method', request.method)
 
     if request.method == 'POST':
-
+        
         msgfrm = MsgForm(request.POST)
-        # print('msgfrm',msgfrm.data.get('msg'))
+        print('request.POST',request.POST)
         if msgfrm.is_valid():
             msgfrm.save()
 
@@ -78,8 +78,13 @@ def home(request):
     #     # Breaking once connection closed
     #     break
     
+    msgs = list(Msg.objects.all())
+    msg_dict = dict((i.sender, [i.msg, i.lastSent]) for i in msgs)
+
+    # for k in msg_dict.keys():
+    #     print(k, msg_dict[k][0])
     
-    return render(request, 'home.html', {'msgfrm':msgfrm})
+    return render(request, 'home.html', {'msgfrm':msgfrm, 'msgs':msg_dict})
 
 @guest
 def userRegistration(request):
