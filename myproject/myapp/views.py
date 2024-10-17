@@ -1,12 +1,15 @@
 from django.shortcuts import render, redirect
 from .models import Msg 
-from .forms import MsgForm
+from .forms import MsgForm, ProfileUpdateForm
+# from .forms import MsgForm
 from django.http import HttpResponse
 import socket
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import login, logout, authenticate
 from .middleware import auth, guest
 from django.utils.decorators import method_decorator
+from django.contrib.auth.models import User
+# from myapp.models import Profile  # Replace 'myapp' with your app name
 
 # Create your views here.
 
@@ -27,17 +30,20 @@ def home(request):
     # except socket.error as err:
     #             return render(request, 'error.html', {'error':err})
     # print('username', request.user.username)
-    msgfrm = MsgForm(initial={'sender': request.user.username})
+    msgfrm = MsgForm()
 
     # print(s,s)
     # print('method', request.method)
 
     if request.method == 'POST':
-        
-        msgfrm = MsgForm(request.POST)
         print('request.POST',request.POST)
+        msgfrm = MsgForm(request.POST)
+        print('msgfrm err', msgfrm.errors)
         if msgfrm.is_valid():
-            msgfrm.save()
+            print('msgfrm', msgfrm)
+            msg_instance = msgfrm.save(commit=False)  # Don’t save to the database yet
+            msg_instance.user = request.user  # Assign the logged-in user
+            msg_instance.save()  # Save to the database
 
             # connect to the server on local computer  
             # s.connect(('127.0.0.1', port)) 
@@ -52,7 +58,7 @@ def home(request):
             # # close the connection 
             # s.close()   
             
-            return render('home')
+            return render(request,'home.html',{'msgfrm':msgfrm})
     
     # s.bind(('127.0.0.1', port))
 
@@ -79,12 +85,36 @@ def home(request):
     #     break
     
     msgs = list(Msg.objects.all())
-    msg_dict = dict((i.sender, [i.msg, i.lastSent]) for i in msgs)
+    msg_dict = dict((i.user.username, [i.msg, i.senton, i.user.profile.image]) for i in msgs)
 
     # for k in msg_dict.keys():
     #     print(k, msg_dict[k][0])
     
     return render(request, 'home.html', {'msgfrm':msgfrm, 'msgs':msg_dict})
+
+@auth 
+def update(request):
+    if request.method == 'POST':
+        profile = ProfileUpdateForm(request.POST, request.FILES)
+        if profile.is_valid():
+            profile_inst = profile.save(commit=False)
+            profile_inst.user = request.user
+            profile_inst.save()
+            return redirect('home')
+    else:
+        profile = ProfileUpdateForm()
+        return render(request, 'update.html', {'profile_form':profile})
+
+# def profile(request):
+#     users_without_profile = User.objects.filter(profile__isnull=True)
+
+#     for user in users_without_profile:
+#         Profile.objects.create(user=user)
+
+#     return redirect('home')
+
+
+
 
 @guest
 def userRegistration(request):

@@ -16,10 +16,11 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from .views import home, external, userRegistration, userLogin, userLogout
+from .views import home, external, userRegistration, userLogin, userLogout, update
 
 urlpatterns = [
     path('', home, name='home'),
+    path('update', update, name='update'),
     path('ext', external, name='external'),
     path('registration', userRegistration, name='registration'),
     path('login', userLogin, name='login'),
